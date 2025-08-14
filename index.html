@@ -371,4 +371,356 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+  40%, 43% { transform: translate3d(0, -10px, 0); }
+  70% { transform: translate3d(0, -5px, 0); }
+  90% { transform: translate3d(0, -2px, 0); }
+}
+
+/* Toast animations */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100px); }
+}
+@media (max-width: 768px) {
+  .container { padding: 15px; }
+  .logo { font-size: 2rem; }
+  .upload-section { padding: 30px 20px; }
+  .dropzone { padding: 40px 20px; }
+  .actions { flex-direction: column; }
+  .btn { justify-content: center; }
+}
+
+/* Hidden input */
+#fileInput { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1 class="logo">📄 ultaPDF</h1>
+    <p class="tagline">Merge up to 500 files instantly - PDF, Word, Excel, PowerPoint & Images</p>
+  </div>
+
+  <!-- Main Upload Section -->
+  <div class="upload-section">
+    <div class="dropzone" id="dropzone">
+      <div class="upload-icon">☁️</div>
+      <h3 class="upload-text">Drag & Drop Files Here</h3>
+      <p class="upload-subtext">or click to browse and select files</p>
+      <div class="supported-formats">
+        <span class="format-tag">PDF</span>
+        <span class="format-tag">Word</span>
+        <span class="format-tag">Excel</span>
+        <span class="format-tag">PowerPoint</span>
+        <span class="format-tag">Images</span>
+      </div>
+    </div>
+
+    <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" />
+
+    <!-- Files Preview -->
+    <div class="files-preview" id="filesPreview">
+      <div class="preview-header">
+        <h3 class="preview-title">Selected Files</h3>
+        <span class="file-count" id="fileCount">0 files</span>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section" id="progressSection">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p class="progress-text" id="progressText">Processing files...</p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions">
+      <button class="btn btn-secondary" id="clearBtn">🗑️ Clear All</button>
+      <button class="btn btn-primary" id="mergeBtn" disabled>🔗 Merge Files into PDF</button>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3 class="feature-title">Lightning Fast</h3>
+      <p class="feature-desc">Merge hundreds of files in seconds with our optimized processing engine</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3 class="feature-title">100% Secure</h3>
+      <p class="feature-desc">Your files are processed locally and automatically deleted after merging</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3 class="feature-title">Any Device</h3>
+      <p class="feature-desc">Works perfectly on desktop, tablet, and mobile devices</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🆓</div>
+      <h3 class="feature-title">Completely Free</h3>
+      <p class="feature-desc">No registration, no watermarks, no hidden fees - just merge files!</p>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedFiles = [];
+
+// DOM Elements
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const filesPreview = document.getElementById('filesPreview');
+const fileList = document.getElementById('fileList');
+const fileCount = document.getElementById('fileCount');
+const mergeBtn = document.getElementById('mergeBtn');
+const clearBtn = document.getElementById('clearBtn');
+const progressSection = document.getElementById('progressSection');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+
+// Event Listeners
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', handleDragOver);
+dropzone.addEventListener('dragleave', handleDragLeave);
+dropzone.addEventListener('drop', handleDrop);
+fileInput.addEventListener('change', handleFileSelect);
+mergeBtn.addEventListener('click', handleMerge);
+clearBtn.addEventListener('click', clearFiles);
+
+function handleDragOver(e) {
+  e.preventDefault();
+  dropzone.classList.add('dragover');
+}
+
+function handleDragLeave() {
+  dropzone.classList.remove('dragover');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const files = Array.from(e.dataTransfer.files);
+  addFiles(files);
+}
+
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  addFiles(files);
+}
+
+function addFiles(files) {
+  const validExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png'];
+  
+  files.forEach(file => {
+    if (selectedFiles.length >= 500) return;
+    
+    const extension = file.name.toLowerCase().split('.').pop();
+    if (validExtensions.includes(extension)) {
+      selectedFiles.push({
+        file: file,
+        id: Date.now() + Math.random(),
+        extension: extension
+      });
+    }
+  });
+  
+  updateFileList();
+}
+
+function updateFileList() {
+  fileList.innerHTML = '';
+  fileCount.textContent = `${selectedFiles.length} files`;
+  
+  if (selectedFiles.length > 0) {
+    filesPreview.classList.add('show');
+    mergeBtn.disabled = false;
+  } else {
+    filesPreview.classList.remove('show');
+    mergeBtn.disabled = true;
+  }
+  
+  selectedFiles.forEach((item, index) => {
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    
+    const extension = item.extension;
+    let iconClass = 'file-icon ';
+    let iconText = '';
+    
+    if (extension === 'pdf') { iconClass += 'pdf'; iconText = 'PDF'; }
+    else if (['doc', 'docx'].includes(extension)) { iconClass += 'doc'; iconText = 'DOC'; }
+    else if (['xls', 'xlsx'].includes(extension)) { iconClass += 'xls'; iconText = 'XLS'; }
+    else if (['ppt', 'pptx'].includes(extension)) { iconClass += 'ppt'; iconText = 'PPT'; }
+    else if (['jpg', 'jpeg', 'png'].includes(extension)) { iconClass += 'img'; iconText = 'IMG'; }
+    
+    fileItem.innerHTML = `
+      <div class="${iconClass}">${iconText}</div>
+      <div class="file-info">
+        <div class="file-name">${item.file.name}</div>
+        <div class="file-size">${formatFileSize(item.file.size)}</div>
+      </div>
+      <button class="file-remove" onclick="removeFile(${index})">×</button>
+    `;
+    
+    fileList.appendChild(fileItem);
+  });
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateFileList();
+}
+
+function clearFiles() {
+  selectedFiles = [];
+  updateFileList();
+  fileInput.value = '';
+}
+
+function handleMerge() {
+  if (selectedFiles.length === 0) return;
+  
+  // Show progress
+  progressSection.classList.add('show');
+  mergeBtn.disabled = true;
+  progressText.textContent = 'Preparing files...';
+  
+  // Create FormData for backend
+  const formData = new FormData();
+  selectedFiles.forEach(item => {
+    formData.append('files', item.file);
+  });
+  
+  // Call backend API with error handling
+  fetch('/merge', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.text().then(text => {
+        let errorMsg = 'Server error occurred';
+        try {
+          const errorData = JSON.parse(text);
+          errorMsg = errorData.error || errorMsg;
+        } catch {
+          errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        return Promise.reject({ error: errorMsg });
+      });
+    }
+    progressFill.style.width = '90%';
+    progressText.textContent = 'Creating download...';
+    return response.blob();
+  })
+  .then(blob => {
+    // Success: download merged PDF
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Download ready!';
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `merged_${Date.now()}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    setTimeout(() => {
+      progressSection.classList.remove('show');
+      mergeBtn.disabled = false;
+      clearFiles();
+      showSuccessMessage('🎉 Files merged and downloaded successfully!');
+    }, 1000);
+  })
+  .catch(error => {
+    progressSection.classList.remove('show');
+    mergeBtn.disabled = false;
+    showErrorMessage('❌ Error: ' + (error.error || 'Failed to merge files. Please try again.'));
+  });
+}
+
+function showSuccessMessage(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    font-weight: 600;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+
+function showErrorMessage(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+    font-weight: 600;
+    z-index: 1000;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 5000);
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+</script>
+</body>
+</html>
